@@ -170,6 +170,8 @@ const GraphMLComponent: React.FC = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragStartTime, setDragStartTime] = useState(0);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 700 });
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -452,6 +454,22 @@ const GraphMLComponent: React.FC = () => {
             className="w-full h-full cursor-crosshair"
             viewBox="0 0 1000 700"
             style={{ cursor: isDragging ? 'grabbing' : 'default' }}
+            onWheel={(e) => {
+              e.preventDefault();
+              const delta = e.deltaY;
+              const rect = svgRef.current?.getBoundingClientRect();
+              if (!rect) return;
+
+              // Calculate mouse position relative to SVG
+              const mouseX = ((e.clientX - rect.left) / rect.width) * 1000;
+              const mouseY = ((e.clientY - rect.top) / rect.height) * 700;
+
+              // Calculate new zoom level
+              const zoomFactor = delta > 0 ? 1.1 : 0.9;
+              const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.1), 5);
+
+              setZoom(newZoom);
+            }}
           >
             <defs>
               <marker
@@ -469,6 +487,7 @@ const GraphMLComponent: React.FC = () => {
               </marker>
             </defs>
 
+            <g transform={`scale(${zoom}) translate(${-500 * (zoom - 1) / zoom}, ${-350 * (zoom - 1) / zoom})`}>
             {/* Render edges */}
             {showConnectionsOnMap && graphData.edges.map((edge, index) => {
               const sourceNode = graphData.nodes.find(n => n.id === edge.source);
@@ -548,6 +567,7 @@ const GraphMLComponent: React.FC = () => {
                 )}
               </g>
             ))}
+            </g>
           </svg>
         </div>
       </div>
