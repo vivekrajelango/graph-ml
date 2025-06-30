@@ -172,7 +172,16 @@ const GraphMLComponent: React.FC = () => {
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 700 });
+  const [activeTab, setActiveTab] = useState('network');
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const loggedInUser = {
+    name: "Dr. Emily Carter",
+    role: "Cardiologist at NHOG",
+    avatar: "👩‍⚕️",
+    peers: 232,
+    following: 124
+  };
 
   useEffect(() => {
     // Parse sample GraphML data on mount
@@ -198,10 +207,13 @@ const GraphMLComponent: React.FC = () => {
     }
   }, []);
 
+  // Separate state for details panel
+  const [showDetails, setShowDetails] = useState(false);
+
   const handleNodeClick = (node: Node) => {
     // Only handle click if we're not in the middle of a drag operation
     setSelectedNode(node);
-    setSidebarOpen(true);
+    setShowDetails(true);
   };
 
   const handleMouseDown = (event: React.MouseEvent, nodeId: string) => {
@@ -306,23 +318,39 @@ const GraphMLComponent: React.FC = () => {
     }
   };
 
+  // Filter nodes based on search term
   const filteredNodes = graphData.nodes.filter(node =>
     node.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Filter edges to only show connections between filtered nodes
+  const filteredEdges = graphData.edges.filter(edge =>
+    filteredNodes.some(node => node.id === edge.source) &&
+    filteredNodes.some(node => node.id === edge.target)
+  );
+
   return (
-    <div className="h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden relative">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+      >
+        {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
       {/* Sidebar */}
-      <div className="w-80 bg-white shadow-lg flex flex-col">
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 w-80 bg-white shadow-lg flex flex-col border-r border-gray-200 fixed lg:relative h-full z-40 transition-transform duration-300 ease-in-out`}>
         {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">PS</span>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                {loggedInUser.avatar}
               </div>
               <div>
-                <h1 className="font-bold text-xl text-gray-900">PeerSpace</h1>
+                <h2 className="font-semibold text-gray-900">{loggedInUser.name}</h2>
+                <p className="text-sm text-gray-600">{loggedInUser.role}</p>
               </div>
             </div>
             <button
@@ -333,13 +361,14 @@ const GraphMLComponent: React.FC = () => {
             </button>
           </div>
           
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
-              {sampleProfile.avatar}
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">My Peers</span>
+              <span className="font-semibold text-gray-900">{loggedInUser.peers}</span>
             </div>
-            <div>
-              <h2 className="font-semibold text-gray-900">{sampleProfile.name}</h2>
-              <p className="text-sm text-gray-600">{sampleProfile.title} at NHOG</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Following</span>
+              <span className="font-semibold text-gray-900">{loggedInUser.following}</span>
             </div>
           </div>
           
@@ -376,17 +405,26 @@ const GraphMLComponent: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
-          <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
-            <Search className="w-5 h-5 text-gray-500" />
+        <nav className="p-4 space-y-1">
+          <button 
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'search' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+            onClick={() => setActiveTab('search')}
+          >
+            <Search className={`w-5 h-5 ${activeTab === 'search' ? 'text-blue-600' : 'text-gray-500'}`} />
             <span>Search</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
-            <Users className="w-5 h-5 text-gray-500" />
+          <button 
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'network' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+            onClick={() => setActiveTab('network')}
+          >
+            <Users className={`w-5 h-5 ${activeTab === 'network' ? 'text-blue-600' : 'text-gray-500'}`} />
             <span>Network</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
-            <BookOpen className="w-5 h-5 text-gray-500" />
+          <button 
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'publications' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+            onClick={() => setActiveTab('publications')}
+          >
+            <BookOpen className={`w-5 h-5 ${activeTab === 'publications' ? 'text-blue-600' : 'text-gray-500'}`} />
             <span>Publications</span>
           </button>
           <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
@@ -421,29 +459,43 @@ const GraphMLComponent: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col lg:ml-0 ml-0">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm p-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-0 justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative flex-1 max-w-lg">
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search in network"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-            <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">
               <Filter className="w-4 h-4" />
               <span>Filter</span>
             </button>
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Following</span>
-            <span className="font-semibold">{sampleProfile.following}</span>
+          <div className="flex items-center gap-6 ml-4">
+            <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
+              <Users className="w-5 h-5" />
+              <span className="font-medium">Create web</span>
+            </button>
+            <div className="h-6 w-px bg-gray-200"></div>
+            <div className="flex items-center gap-3">
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <Bell className="w-5 h-5 text-gray-600" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <MessageCircle className="w-5 h-5 text-gray-600" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <Settings className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -489,7 +541,7 @@ const GraphMLComponent: React.FC = () => {
 
             <g transform={`scale(${zoom}) translate(${-500 * (zoom - 1) / zoom}, ${-350 * (zoom - 1) / zoom})`}>
             {/* Render edges */}
-            {showConnectionsOnMap && graphData.edges.map((edge, index) => {
+            {showConnectionsOnMap && filteredEdges.map((edge, index) => {
               const sourceNode = graphData.nodes.find(n => n.id === edge.source);
               const targetNode = graphData.nodes.find(n => n.id === edge.target);
               
@@ -573,75 +625,88 @@ const GraphMLComponent: React.FC = () => {
       </div>
 
       {/* Profile Panel */}
-      {selectedNode && sidebarOpen && (
-        <div className="w-80 bg-white shadow-lg border-l">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
+      {showDetails && (
+        <div className="fixed lg:relative right-0 top-0 h-full w-full lg:w-96 bg-white shadow-lg border-l border-gray-200 overflow-y-auto z-50">
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Profile Details</h3>
               <button
-                onClick={() => setSidebarOpen(false)}
+                onClick={() => setShowDetails(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                {selectedNode.avatar}
+            <div className="text-center">
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                {selectedNode?.avatar || sampleProfile.avatar}
               </div>
-              <h4 className="font-semibold text-gray-900">{selectedNode.label}</h4>
-              <p className="text-sm text-gray-600">{selectedNode.type}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Connections: {selectedNode.connections}
+              <h4 className="text-xl font-semibold text-gray-900">{selectedNode?.label || sampleProfile.name}</h4>
+              <p className="text-sm text-gray-600 mt-1">{selectedNode?.type || sampleProfile.title}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedNode ? `Connections: ${selectedNode.connections}` : `Peers: ${sampleProfile.peers}`}
               </p>
             </div>
 
             <div className="space-y-4">
-              <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              <button className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
                 View Profile
               </button>
-              <button className="w-full border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">
+              <button className="w-full border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
                 Resume
               </button>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="flex items-center gap-2 text-gray-600 mb-1">
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
                   <Users className="w-4 h-4" />
-                  <span className="text-xs">Connections</span>
+                  <span className="text-sm">Patients Served</span>
                 </div>
-                <div className="font-bold text-lg">{selectedNode.connections}</div>
+                <div className="font-semibold text-xl">{sampleProfile.patientsServed}</div>
+                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
+                  <span>+20</span>
+                  <span className="text-xs text-gray-500">this month</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="flex items-center gap-2 text-gray-600 mb-1">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
                   <Award className="w-4 h-4" />
-                  <span className="text-xs">Success rate</span>
+                  <span className="text-sm">Success Rate</span>
                 </div>
-                <div className="font-bold text-lg">--</div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h5 className="font-medium mb-2">About</h5>
-              <p className="text-sm text-gray-600">
-                {selectedNode.type} node in the network. Click to explore connections and relationships.
-              </p>
-            </div>
-
-            <div className="mt-6">
-              <h5 className="font-medium mb-2">Type</h5>
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                <div>
-                  <div className="font-medium text-sm">{selectedNode.type}</div>
-                  <div className="text-xs text-gray-600">Network Entity</div>
+                <div className="font-semibold text-xl">{sampleProfile.successRate}%</div>
+                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
+                  <span>+3%</span>
+                  <span className="text-xs text-gray-500">this month</span>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">About</h4>
+              <p className="text-gray-600 text-sm leading-relaxed">{sampleProfile.about}</p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Education</h4>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">{sampleProfile.education.institution}</h5>
+                    <p className="text-sm text-gray-600 mt-1">{sampleProfile.education.degree}</p>
+                    <p className="text-sm text-gray-600">{sampleProfile.education.specialization}</p>
+                    <p className="text-xs text-gray-500 mt-2">{sampleProfile.education.period}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+                </div>
+              </div>
+  
       )}
     </div>
   );
