@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Filter, Users, BookOpen, Building, Award, MapPin, MessageCircle, Bell, Settings, Menu, X } from 'lucide-react';
+import { Search, Filter, Users, BookOpen, Building, Award, MapPin, MessageCircle, Bell, Settings, Menu, X, Upload } from 'lucide-react';
 
 // Types
 interface Node {
@@ -171,6 +171,8 @@ const GraphMLComponent: React.FC = () => {
   const [dragStartTime, setDragStartTime] = useState(0);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [isChecked, setIsChecked] = useState(false);
+  const [isMapChecked, setMapChecked] = useState(true);
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 700 });
   const [activeTab, setActiveTab] = useState('network');
   const svgRef = useRef<SVGSVGElement>(null);
@@ -340,10 +342,9 @@ const GraphMLComponent: React.FC = () => {
       </button>
 
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 w-80 bg-white shadow-lg flex flex-col border-r border-gray-200 fixed lg:relative h-full z-40 transition-transform duration-300 ease-in-out`}>
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-6">
+      <div className={`${sidebarOpen ? 'translate-x-0 w-80' : '-translate-x-80'} lg:translate-x-0 w-20 bg-white shadow-lg flex flex-col border-r border-gray-200 fixed lg:relative h-full z-40 transition-transform duration-300 ease-in-out`}>
+        <div className="md:hidden p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
                 {loggedInUser.avatar}
@@ -353,15 +354,9 @@ const GraphMLComponent: React.FC = () => {
                 <p className="text-sm text-gray-600">{loggedInUser.role}</p>
               </div>
             </div>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
           </div>
           
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-row items-center justify-center gap-3 mt-2">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">My Peers</span>
               <span className="font-semibold text-gray-900">{loggedInUser.peers}</span>
@@ -376,30 +371,18 @@ const GraphMLComponent: React.FC = () => {
             <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
               Create web
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">My Peers</span>
-              <span className="font-semibold text-gray-900">{sampleProfile.peers}</span>
-            </div>
           </div>
-          
-          <div className="flex items-center gap-4 text-sm">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showConnections}
-                onChange={(e) => setShowConnections(e.target.checked)}
-                className="rounded"
-              />
-              <span>Show connections</span>
+
+          <div className="flex flex-col items-start justify-center gap-2">
+            <label className="inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} className="sr-only peer" />
+              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+              <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Show connections</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showConnectionsOnMap}
-                onChange={(e) => setShowConnectionsOnMap(e.target.checked)}
-                className="rounded"
-              />
-              <span>Show my connections on map</span>
+            <label className="inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" checked={isMapChecked} onChange={(e) => setMapChecked(e.target.checked)} className="sr-only peer" />
+              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+              <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Show my connections on map</span>
             </label>
           </div>
         </div>
@@ -411,33 +394,33 @@ const GraphMLComponent: React.FC = () => {
             onClick={() => setActiveTab('search')}
           >
             <Search className={`w-5 h-5 ${activeTab === 'search' ? 'text-blue-600' : 'text-gray-500'}`} />
-            <span>Search</span>
+            <span className='md:hidden '>Search</span>
           </button>
           <button 
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'network' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
             onClick={() => setActiveTab('network')}
           >
             <Users className={`w-5 h-5 ${activeTab === 'network' ? 'text-blue-600' : 'text-gray-500'}`} />
-            <span>Network</span>
+            <span className='md:hidden '>Network</span>
           </button>
           <button 
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'publications' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
             onClick={() => setActiveTab('publications')}
           >
             <BookOpen className={`w-5 h-5 ${activeTab === 'publications' ? 'text-blue-600' : 'text-gray-500'}`} />
-            <span>Publications</span>
+            <span className='md:hidden '>Publications</span>
           </button>
           <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-500" />
-            <span>Notifications</span>
+            <span className='md:hidden '>Notifications</span>
           </button>
           <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
             <MessageCircle className="w-5 h-5 text-gray-500" />
-            <span>Messages</span>
+            <span className='md:hidden '>Messages</span>
           </button>
           <button className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-lg">
             <Settings className="w-5 h-5 text-gray-500" />
-            <span>Settings</span>
+            <span className='md:hidden '>Settings</span>
           </button>
         </nav>
 
@@ -450,52 +433,159 @@ const GraphMLComponent: React.FC = () => {
               onChange={handleFileUpload}
               className="hidden"
             />
-            <div className="w-full bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50">
-              <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Upload GraphML File</p>
+            <div className="w-full bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-1 text-center cursor-pointer hover:bg-gray-50">
+              <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 md:hidden ">Upload GraphML File</p>
             </div>
           </label>
         </div>
       </div>
 
+      {showDetails && (
+        <div className="fixed lg:relative left-0 top-0 h-full w-full lg:w-96 bg-white shadow-lg border-l border-gray-200 overflow-y-auto z-50">
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Profile Details</h3>
+              <button
+                onClick={() => setShowDetails(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                {selectedNode?.avatar || sampleProfile.avatar}
+              </div>
+              <h4 className="text-xl font-semibold text-gray-900">{selectedNode?.label || sampleProfile.name}</h4>
+              <p className="text-sm text-gray-600 mt-1">{selectedNode?.type || sampleProfile.title}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedNode ? `Connections: ${selectedNode.connections}` : `Peers: ${sampleProfile.peers}`}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <button className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
+                View Profile
+              </button>
+              <button className="w-full border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                Resume
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm">Patients Served</span>
+                </div>
+                <div className="font-semibold text-xl">{sampleProfile.patientsServed}</div>
+                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
+                  <span>+20</span>
+                  <span className="text-xs text-gray-500">this month</span>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <Award className="w-4 h-4" />
+                  <span className="text-sm">Success Rate</span>
+                </div>
+                <div className="font-semibold text-xl">{sampleProfile.successRate}%</div>
+                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
+                  <span>+3%</span>
+                  <span className="text-xs text-gray-500">this month</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">About</h4>
+              <p className="text-gray-600 text-sm leading-relaxed">{sampleProfile.about}</p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Education</h4>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">{sampleProfile.education.institution}</h5>
+                    <p className="text-sm text-gray-600 mt-1">{sampleProfile.education.degree}</p>
+                    <p className="text-sm text-gray-600">{sampleProfile.education.specialization}</p>
+                    <p className="text-xs text-gray-500 mt-2">{sampleProfile.education.period}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+                </div>
+              </div>
+      )}
+    
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0 ml-0">
-        {/* Top Bar */}
+        <section className='hidden md:flex flex-row py-2 px-4 bg-gray-50'>
+          <div className="w-[40%] flex items-center justify-start gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                {loggedInUser.avatar}
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-900">{loggedInUser.name}</h2>
+                <p className="text-sm text-gray-600">{loggedInUser.role}</p>
+              </div>
+            </div>
+          </div>
+          <div className="w-[35%] flex flex-col items-center justify-center gap-1">
+            <div className='flex flex-row gap-2 '>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">My Peers</span>
+                <span className="text-xs text-gray-900">{loggedInUser.peers}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Following</span>
+                <span className="text-xs text-gray-900">{loggedInUser.following}</span>
+              </div>
+            </div>
+
+            <button className="w-[120px] bg-blue-600 text-white px-2 py-1 rounded-lg text-sm font-medium hover:bg-blue-700">
+              Create web
+            </button>
+          </div>
+          
+          <div className="w-[25%] flex flex-col items-start justify-center gap-2">
+            <label className="inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} className="sr-only peer" />
+              <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300  rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <span className="ms-3 text-sm font-medium text-gray-900">Show connections</span>
+            </label>
+            <label className="inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" checked={isMapChecked} onChange={(e) => setMapChecked(e.target.checked)} className="sr-only peer" />
+              <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+              <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Show my connections on map</span>
+            </label>
+          </div>
+        </section>
+
+        {/* Search Bar */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-0 justify-between">
           <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1 max-w-lg">
+            <div className="relative flex-1">
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search in network"
+                placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">
+            <button className="flex items-center gap-2 px-6 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">
               <Filter className="w-4 h-4" />
               <span>Filter</span>
             </button>
-          </div>
-          
-          <div className="flex items-center gap-6 ml-4">
-            <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
-              <Users className="w-5 h-5" />
-              <span className="font-medium">Create web</span>
-            </button>
-            <div className="h-6 w-px bg-gray-200"></div>
-            <div className="flex items-center gap-3">
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Bell className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Settings className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -507,7 +597,7 @@ const GraphMLComponent: React.FC = () => {
             viewBox="0 0 1000 700"
             style={{ cursor: isDragging ? 'grabbing' : 'default' }}
             onWheel={(e) => {
-              e.preventDefault();
+              // e.preventDefault();
               const delta = e.deltaY;
               const rect = svgRef.current?.getBoundingClientRect();
               if (!rect) return;
@@ -624,90 +714,6 @@ const GraphMLComponent: React.FC = () => {
         </div>
       </div>
 
-      {/* Profile Panel */}
-      {showDetails && (
-        <div className="fixed lg:relative right-0 top-0 h-full w-full lg:w-96 bg-white shadow-lg border-l border-gray-200 overflow-y-auto z-50">
-          <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Profile Details</h3>
-              <button
-                onClick={() => setShowDetails(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-                {selectedNode?.avatar || sampleProfile.avatar}
-              </div>
-              <h4 className="text-xl font-semibold text-gray-900">{selectedNode?.label || sampleProfile.name}</h4>
-              <p className="text-sm text-gray-600 mt-1">{selectedNode?.type || sampleProfile.title}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedNode ? `Connections: ${selectedNode.connections}` : `Peers: ${sampleProfile.peers}`}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <button className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 font-medium">
-                View Profile
-              </button>
-              <button className="w-full border border-gray-200 px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
-                Resume
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl">
-              <div>
-                <div className="flex items-center gap-2 text-gray-600 mb-2">
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm">Patients Served</span>
-                </div>
-                <div className="font-semibold text-xl">{sampleProfile.patientsServed}</div>
-                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
-                  <span>+20</span>
-                  <span className="text-xs text-gray-500">this month</span>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-gray-600 mb-2">
-                  <Award className="w-4 h-4" />
-                  <span className="text-sm">Success Rate</span>
-                </div>
-                <div className="font-semibold text-xl">{sampleProfile.successRate}%</div>
-                <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
-                  <span>+3%</span>
-                  <span className="text-xs text-gray-500">this month</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">About</h4>
-              <p className="text-gray-600 text-sm leading-relaxed">{sampleProfile.about}</p>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Education</h4>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h5 className="font-medium text-gray-900">{sampleProfile.education.institution}</h5>
-                    <p className="text-sm text-gray-600 mt-1">{sampleProfile.education.degree}</p>
-                    <p className="text-sm text-gray-600">{sampleProfile.education.specialization}</p>
-                    <p className="text-xs text-gray-500 mt-2">{sampleProfile.education.period}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-                </div>
-              </div>
-  
-      )}
     </div>
   );
 };
