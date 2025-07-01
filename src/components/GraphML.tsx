@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Filter, Users, BookOpen, Building, Award, MapPin, MessageCircle, Bell, Settings, Menu, X, Upload } from 'lucide-react';
 
@@ -442,7 +443,7 @@ const GraphMLComponent: React.FC = () => {
       </div>
 
       {showDetails && (
-        <div className="fixed lg:relative left-0 top-0 h-full w-full lg:w-96 bg-white shadow-lg border-l border-gray-200 overflow-y-auto z-50">
+        <div className="fixed lg:relative left-0 top-0 h-full w-full lg:w-84 bg-white shadow-lg border-l border-gray-200 overflow-y-auto z-50">
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Profile Details</h3>
@@ -570,7 +571,7 @@ const GraphMLComponent: React.FC = () => {
         </section>
 
         {/* Search Bar */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-0 justify-between">
+        <div className="bg-white shadow-sm border-b border-gray-200 p-3 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-0 justify-between">
           <div className="flex items-center gap-4 flex-1">
             <div className="relative flex-1">
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -579,10 +580,10 @@ const GraphMLComponent: React.FC = () => {
                 placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               />
             </div>
-            <button className="flex items-center gap-2 px-6 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">
+            <button className="flex items-center gap-2 px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">
               <Filter className="w-4 h-4" />
               <span>Filter</span>
             </button>
@@ -593,7 +594,7 @@ const GraphMLComponent: React.FC = () => {
         <div className="flex-1 relative bg-gradient-to-br from-blue-50 to-indigo-100">
           <svg
             ref={svgRef}
-            className="w-full h-full cursor-crosshair"
+            className="w-full h-[90vh] cursor-crosshair"
             viewBox="0 0 1000 700"
             style={{ cursor: isDragging ? 'grabbing' : 'default' }}
             onWheel={(e) => {
@@ -601,10 +602,6 @@ const GraphMLComponent: React.FC = () => {
               const delta = e.deltaY;
               const rect = svgRef.current?.getBoundingClientRect();
               if (!rect) return;
-
-              // Calculate mouse position relative to SVG
-              const mouseX = ((e.clientX - rect.left) / rect.width) * 1000;
-              const mouseY = ((e.clientY - rect.top) / rect.height) * 700;
 
               // Calculate new zoom level
               const zoomFactor = delta > 0 ? 1.1 : 0.9;
