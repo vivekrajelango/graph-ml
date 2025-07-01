@@ -1,5 +1,7 @@
 "use client"
-import GraphMLComponent from "@/components/GraphML";
+
+import GraphMLComponent from "../components/GraphML";
+
 
 export default function Home() {
   return (
