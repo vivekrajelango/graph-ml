@@ -1,7 +1,6 @@
 "use client"
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Sidebar from '../Sidebar';
-import SearchBar from '../Header/SearchBar';
 import NetworkVisualization from '../NetworkVisualization';
 import ProfileDetails from '../ProfileDetails';
 import { parseGraphML } from '../../utils/graphMLParser';

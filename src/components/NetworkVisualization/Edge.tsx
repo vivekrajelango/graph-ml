@@ -6,7 +6,7 @@ interface EdgeProps {
   nodes: Node[];
 }
 
-const Edge= ({ edge, nodes }:EdgeProps) => {
+const EdgeValues= ({ edge, nodes }:EdgeProps) => {
   const sourceNode = nodes.find(n => n.id === edge.source);
   const targetNode = nodes.find(n => n.id === edge.target);
 
@@ -26,4 +26,4 @@ const Edge= ({ edge, nodes }:EdgeProps) => {
   );
 };
 
-export default Edge;
+export default EdgeValues;

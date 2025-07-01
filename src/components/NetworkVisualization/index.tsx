@@ -1,7 +1,7 @@
 import React from 'react';
 import Node from './Node';
-import Edge from './Edge';
-import { GraphData, Node as NodeType } from '../../types/types';
+import EdgeValues from './Edge';
+import { Edge, GraphData, Node as NodeType } from '../../types/types';
 
 interface NetworkVisualizationProps {
   svgRef: React.MutableRefObject<SVGSVGElement | null>;
@@ -14,7 +14,7 @@ interface NetworkVisualizationProps {
   draggedNode: string | null;
   graphData: GraphData;
   filteredNodes: NodeType[];
-  filteredEdges: any[];
+  filteredEdges: Edge[];
   handleSvgMouseDown: (event: React.MouseEvent) => void;
   handleMouseDown: (event: React.MouseEvent, nodeId: string) => void;
   getNodeColor: (type: string) => string;
@@ -90,7 +90,7 @@ const NetworkVisualization = ({
 
         <g transform={`scale(${zoom}) translate(${-500 * (zoom - 1) / zoom}, ${-350 * (zoom - 1) / zoom})`}>
           {filteredEdges.map((edge, index) => (
-            <Edge
+            <EdgeValues
               key={`edge-${index}`}
               edge={edge}
               nodes={graphData.nodes}
