@@ -67,23 +67,23 @@ const sampleProfile: UserProfile = {
 const parseGraphML = (xmlString: string): GraphData => {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-  
+
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  
+
   // Parse nodes
   const nodeElements = xmlDoc.querySelectorAll('node');
   nodeElements.forEach((nodeEl, index) => {
     const id = nodeEl.getAttribute('id') || `node-${index}`;
     const labelEl = nodeEl.querySelector('data[key="labels"]');
     const label = labelEl?.textContent || 'Unknown';
-    
+
     // Extract type from label or id
     let type = 'Researcher';
     if (label.includes('BookPublication') || id.includes('BookPublication')) type = 'Publication';
     else if (label.includes('Publisher') || id.includes('Publisher')) type = 'Publisher';
     else if (label.includes('Institution') || id.includes('Institution')) type = 'Institution';
-    
+
     nodes.push({
       id,
       label: id.includes('0000-') ? `Researcher ${index + 1}` : label,
@@ -94,14 +94,14 @@ const parseGraphML = (xmlString: string): GraphData => {
       avatar: type === 'Researcher' ? '👨‍⚕️' : type === 'Publication' ? '📚' : '🏢'
     });
   });
-  
+
   // Parse edges
   const edgeElements = xmlDoc.querySelectorAll('edge');
   edgeElements.forEach((edgeEl) => {
     const source = edgeEl.getAttribute('source');
     const target = edgeEl.getAttribute('target');
     const labelEl = edgeEl.querySelector('data[key="labels"]');
-    
+
     if (source && target) {
       edges.push({
         source,
@@ -110,14 +110,14 @@ const parseGraphML = (xmlString: string): GraphData => {
       });
     }
   });
-  
+
   // Calculate connections
   nodes.forEach(node => {
-    node.connections = edges.filter(edge => 
+    node.connections = edges.filter(edge =>
       edge.source === node.id || edge.target === node.id
     ).length;
   });
-  
+
   return { nodes, edges };
 };
 
@@ -176,6 +176,9 @@ const GraphMLComponent: React.FC = () => {
   const [isMapChecked, setMapChecked] = useState(true);
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 700 });
   const [activeTab, setActiveTab] = useState('network');
+  const [isPanning, setIsPanning] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
 
   const loggedInUser = {
@@ -222,7 +225,7 @@ const GraphMLComponent: React.FC = () => {
   const handleMouseDown = (event: React.MouseEvent, nodeId: string) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const svg = svgRef.current;
     if (!svg) return;
 
@@ -248,7 +251,7 @@ const GraphMLComponent: React.FC = () => {
     const currentTime = Date.now();
     const timeDiff = currentTime - dragStartTime;
     const distance = Math.sqrt(
-      Math.pow(event.clientX - dragStartPos.x, 2) + 
+      Math.pow(event.clientX - dragStartPos.x, 2) +
       Math.pow(event.clientY - dragStartPos.y, 2)
     );
 
@@ -281,7 +284,7 @@ const GraphMLComponent: React.FC = () => {
     const currentTime = Date.now();
     const timeDiff = currentTime - dragStartTime;
     const distance = Math.sqrt(
-      Math.pow(event.clientX - dragStartPos.x, 2) + 
+      Math.pow(event.clientX - dragStartPos.x, 2) +
       Math.pow(event.clientY - dragStartPos.y, 2)
     );
 
@@ -332,6 +335,73 @@ const GraphMLComponent: React.FC = () => {
     filteredNodes.some(node => node.id === edge.target)
   );
 
+  const handleSvgMouseDown = (event: React.MouseEvent) => {
+    if (event.target === svgRef.current) {
+      setIsPanning(true);
+      setPanStart({
+        x: event.clientX - panOffset.x,
+        y: event.clientY - panOffset.y
+      });
+    }
+  };
+
+  const handleSvgMouseMove = useCallback((event: MouseEvent) => {
+    if (isPanning) {
+      const newX = event.clientX - panStart.x;
+      const newY = event.clientY - panStart.y;
+      setPanOffset({ x: newX, y: newY });
+      setViewBox({
+        ...viewBox,
+        x: -newX,
+        y: -newY
+      });
+    }
+  }, [isPanning, panStart, viewBox]);
+
+  const handleSvgMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  useEffect(() => {
+    if (isPanning) {
+      document.addEventListener('mousemove', handleSvgMouseMove);
+      document.addEventListener('mouseup', handleSvgMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleSvgMouseMove);
+        document.removeEventListener('mouseup', handleSvgMouseUp);
+      };
+    }
+  }, [isPanning, handleSvgMouseMove, handleSvgMouseUp]);
+
+  const centerFilteredNodes = useCallback(() => {
+    if (filteredNodes.length === 0) return;
+
+    const bounds = filteredNodes.reduce((acc, node) => {
+      return {
+        minX: Math.min(acc.minX, node.x),
+        minY: Math.min(acc.minY, node.y),
+        maxX: Math.max(acc.maxX, node.x),
+        maxY: Math.max(acc.maxY, node.y)
+      };
+    }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+
+    const centerX = (bounds.minX + bounds.maxX) / 2;
+    const centerY = (bounds.minY + bounds.maxY) / 2;
+
+    setViewBox({
+      x: centerX - viewBox.width / 2,
+      y: centerY - viewBox.height / 2,
+      width: viewBox.width,
+      height: viewBox.height
+    });
+  }, [filteredNodes, viewBox.width, viewBox.height]);
+
+  useEffect(() => {
+    if (searchTerm) {
+      centerFilteredNodes();
+    }
+  }, [searchTerm, centerFilteredNodes]);
+
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden relative">
       {/* Mobile Menu Button */}
@@ -356,7 +426,7 @@ const GraphMLComponent: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-row items-center justify-center gap-3 mt-2">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">My Peers</span>
@@ -367,7 +437,7 @@ const GraphMLComponent: React.FC = () => {
               <span className="font-semibold text-gray-900">{loggedInUser.following}</span>
             </div>
           </div>
-          
+
           <div className="flex gap-2 mb-4">
             <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
               Create web
@@ -390,21 +460,21 @@ const GraphMLComponent: React.FC = () => {
 
         {/* Navigation */}
         <nav className="p-4 space-y-1">
-          <button 
+          <button
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'search' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
             onClick={() => setActiveTab('search')}
           >
             <Search className={`w-5 h-5 ${activeTab === 'search' ? 'text-blue-600' : 'text-gray-500'}`} />
             <span className='md:hidden '>Search</span>
           </button>
-          <button 
+          <button
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'network' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
             onClick={() => setActiveTab('network')}
           >
             <Users className={`w-5 h-5 ${activeTab === 'network' ? 'text-blue-600' : 'text-gray-500'}`} />
             <span className='md:hidden '>Network</span>
           </button>
-          <button 
+          <button
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg ${activeTab === 'publications' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
             onClick={() => setActiveTab('publications')}
           >
@@ -454,7 +524,7 @@ const GraphMLComponent: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="text-center">
               <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
                 {selectedNode?.avatar || sampleProfile.avatar}
@@ -521,10 +591,10 @@ const GraphMLComponent: React.FC = () => {
                 </div>
               </div>
             </div>
-                </div>
-              </div>
+          </div>
+        </div>
       )}
-    
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0 ml-0">
         <section className='hidden md:flex flex-row py-2 px-4 bg-gray-50'>
@@ -555,7 +625,7 @@ const GraphMLComponent: React.FC = () => {
               Create web
             </button>
           </div>
-          
+
           <div className="w-[25%] flex flex-col items-start justify-center gap-2">
             <label className="inline-flex items-center cursor-pointer">
               <input type="checkbox" value="" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} className="sr-only peer" />
@@ -595,10 +665,11 @@ const GraphMLComponent: React.FC = () => {
           <svg
             ref={svgRef}
             className="w-full h-[90vh] cursor-crosshair"
-            viewBox="0 0 1000 700"
-            style={{ cursor: isDragging ? 'grabbing' : 'default' }}
+            viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+            style={{ cursor: isPanning ? 'grabbing' : isDragging ? 'grabbing' : 'grab' }}
+            onMouseDown={handleSvgMouseDown}
             onWheel={(e) => {
-              // e.preventDefault();
+              e.preventDefault();
               const delta = e.deltaY;
               const rect = svgRef.current?.getBoundingClientRect();
               if (!rect) return;
@@ -606,6 +677,17 @@ const GraphMLComponent: React.FC = () => {
               // Calculate new zoom level
               const zoomFactor = delta > 0 ? 1.1 : 0.9;
               const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.1), 5);
+
+              // Update viewBox to zoom around the cursor position
+              const mouseX = ((e.clientX - rect.left) / rect.width) * viewBox.width + viewBox.x;
+              const mouseY = ((e.clientY - rect.top) / rect.height) * viewBox.height + viewBox.y;
+
+              setViewBox({
+                x: mouseX - (mouseX - viewBox.x) / zoomFactor,
+                y: mouseY - (mouseY - viewBox.y) / zoomFactor,
+                width: viewBox.width / zoomFactor,
+                height: viewBox.height / zoomFactor
+              });
 
               setZoom(newZoom);
             }}
@@ -627,85 +709,84 @@ const GraphMLComponent: React.FC = () => {
             </defs>
 
             <g transform={`scale(${zoom}) translate(${-500 * (zoom - 1) / zoom}, ${-350 * (zoom - 1) / zoom})`}>
-            {/* Render edges */}
-            {showConnectionsOnMap && filteredEdges.map((edge, index) => {
-              const sourceNode = graphData.nodes.find(n => n.id === edge.source);
-              const targetNode = graphData.nodes.find(n => n.id === edge.target);
-              
-              if (!sourceNode || !targetNode) return null;
-              
-              return (
-                <line
-                  key={`edge-${index}`}
-                  x1={sourceNode.x}
-                  y1={sourceNode.y}
-                  x2={targetNode.x}
-                  y2={targetNode.y}
-                  stroke="#9ca3af"
-                  strokeWidth="2"
-                  opacity="0.6"
-                  markerEnd="url(#arrowhead)"
-                />
-              );
-            })}
-            
-            {/* Render nodes */}
-            {filteredNodes.map((node) => (
-              <g key={node.id}>
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r="28"
-                  className={`${getNodeColor(node.type)} cursor-pointer hover:opacity-90 transition-all duration-200 ${
-                    draggedNode === node.id ? 'drop-shadow-lg scale-100' : 'hover:scale-100'
-                  }`}
-                  onMouseDown={(e) => handleMouseDown(e, node.id)}
-                  stroke="white"
-                  strokeWidth="3"
-                  style={{ cursor: isDragging && draggedNode === node.id ? 'grabbing' : 'grab' }}
-                />
-                <text
-                  x={node.x}
-                  y={node.y}
-                  textAnchor="middle"
-                  dy="0.35em"
-                  className="fill-white text-lg font-medium pointer-events-none select-none"
-                >
-                  {node.avatar}
-                </text>
-                {/* Node label */}
-                <text
-                  x={node.x}
-                  y={node.y + 45}
-                  textAnchor="middle"
-                  className="fill-gray-700 text-sm font-medium pointer-events-none select-none"
-                >
-                  {node.label.length > 12 ? node.label.substring(0, 12) + '...' : node.label}
-                </text>
-                {/* Connection count badge */}
-                {node.connections > 0 && (
-                  <g>
-                    <circle
-                      cx={node.x + 20}
-                      cy={node.y - 20}
-                      r="10"
-                      fill="#ef4444"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x={node.x + 20}
-                      y={node.y - 20}
-                      textAnchor="middle"
-                      dy="0.35em"
-                      className="fill-white text-xs font-bold pointer-events-none select-none"
-                    >
-                      {node.connections}
-                    </text>
-                  </g>
-                )}
-              </g>
-            ))}
+              {/* Render edges */}
+              {showConnectionsOnMap && filteredEdges.map((edge, index) => {
+                const sourceNode = graphData.nodes.find(n => n.id === edge.source);
+                const targetNode = graphData.nodes.find(n => n.id === edge.target);
+
+                if (!sourceNode || !targetNode) return null;
+
+                return (
+                  <line
+                    key={`edge-${index}`}
+                    x1={sourceNode.x}
+                    y1={sourceNode.y}
+                    x2={targetNode.x}
+                    y2={targetNode.y}
+                    stroke="#9ca3af"
+                    strokeWidth="2"
+                    opacity="0.6"
+                    markerEnd="url(#arrowhead)"
+                  />
+                );
+              })}
+
+              {/* Render nodes */}
+              {filteredNodes.map((node) => (
+                <g key={node.id}>
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r="28"
+                    className={`${getNodeColor(node.type)} cursor-pointer hover:opacity-90 transition-all duration-200 ${draggedNode === node.id ? 'drop-shadow-lg scale-100' : 'hover:scale-100'
+                      }`}
+                    onMouseDown={(e) => handleMouseDown(e, node.id)}
+                    stroke="white"
+                    strokeWidth="3"
+                    style={{ cursor: isDragging && draggedNode === node.id ? 'grabbing' : 'grab' }}
+                  />
+                  <text
+                    x={node.x}
+                    y={node.y}
+                    textAnchor="middle"
+                    dy="0.35em"
+                    className="fill-white text-lg font-medium pointer-events-none select-none"
+                  >
+                    {node.avatar}
+                  </text>
+                  {/* Node label */}
+                  <text
+                    x={node.x}
+                    y={node.y + 45}
+                    textAnchor="middle"
+                    className="fill-gray-700 text-sm font-medium pointer-events-none select-none"
+                  >
+                    {node.label.length > 12 ? node.label.substring(0, 12) + '...' : node.label}
+                  </text>
+                  {/* Connection count badge */}
+                  {node.connections > 0 && (
+                    <g>
+                      <circle
+                        cx={node.x + 20}
+                        cy={node.y - 20}
+                        r="10"
+                        fill="#ef4444"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x={node.x + 20}
+                        y={node.y - 20}
+                        textAnchor="middle"
+                        dy="0.35em"
+                        className="fill-white text-xs font-bold pointer-events-none select-none"
+                      >
+                        {node.connections}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              ))}
             </g>
           </svg>
         </div>
