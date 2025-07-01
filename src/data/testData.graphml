@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+    <key id="labels" for="edge" attr.name="labels" attr.type="string"/>
+    <key id="labels" for="node" attr.name="labels" attr.type="string"/>
+    <graph edgedefault="directed">
+        
+        <!-- Nodes -->
+        <node id="('Researcher', '0000-0003-0427-0369')">
+            <data key="labels">Researcher</data>
+        </node>
+        <node id="('BookPublication', 'The role of complement dysregulation in AMD mouse models')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('Publisher', 'Advances in Experimental Medicine and Biology')">
+            <data key="labels">Publisher</data>
+        </node>
+        <node id="('Researcher', '0000-0001-7290-4496')">
+            <data key="labels">Researcher</data>
+        </node>
+        <node id="('BookPublication', 'Potential Health Benefits of Blackcurrants')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('BookPublication', 'Phytochemicals')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('BookPublication', 'Clinical Nutrition Studies')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('BookPublication', 'Pistachios beneficially affect multiple lipid and apolipoprotein CVD risk factors')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('BookPublication', 'Anthocyanins and Cancer Prevention')">
+            <data key="labels">BookPublication</data>
+        </node>
+        <node id="('OtherPublication', 'Genotype and ripening method affect carotenoid content and bio-accessibility in banana')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('Publisher', 'FOOD &amp; FUNCTION')">
+            <data key="labels">Publisher</data>
+        </node>
+        <node id="('OtherPublication', 'Exploring the Contribution of (Poly)phenols to the Dietary Exposome Using High Resolution Mass Spectrometry Untargeted Metabolomics')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('Publisher', 'MOLECULAR NUTRITION &amp; FOOD RESEARCH')">
+            <data key="labels">Publisher</data>
+        </node>
+        <node id="('OtherPublication', 'Cocoa Extract Exerts Sex-Specific Effects in an Aggressive Hyper-Glycemia Model: A Pilot Study')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('OtherPublication', 'Boosting the Bioaccessibility of Dietary Bioactives by Delivery as Protein-Polyphenol Aggregate Particles')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('Publisher', 'JOURNAL OF AGRICULTURAL AND FOOD CHEMISTRY')">
+            <data key="labels">Publisher</data>
+        </node>
+        <node id="('OtherPublication', 'The berry health tool chest - an evidence map and interactive resource')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('Publisher', 'NUTRITION REVIEWS')">
+            <data key="labels">Publisher</data>
+        </node>
+        <node id="('OtherPublication', 'Microbial Metabolites of Flavanols in Urine are Associated with Enhanced Anti-Proliferative Activity in Bladder Cancer Cells In Vitro')">
+            <data key="labels">OtherPublication</data>
+        </node>
+        <node id="('Publisher', 'NUTRITION AND CANCER-AN INTERNATIONAL JOURNAL')">
+            <data key="labels">Publisher</data>
+        </node>
+        
+        <!-- Edges -->
+        <edge source="('Researcher', '0000-0003-0427-0369')" target="('BookPublication', 'The role of complement dysregulation in AMD mouse models')">
+            <data key="labels">author_of</data>
+        </edge>
+        <edge source="('BookPublication', 'The role of complement dysregulation in AMD mouse models')" target="('Publisher', 'Advances in Experimental Medicine and Biology')">
+            <data key="labels">published_by</data>
+        </edge>
+        <edge source="('Researcher', '0000-0001-7290-4496')" target="('BookPublication', 'Potential Health Benefits of Blackcurrants')">
+            <data key="labels">author_of</data>
+        </edge>
+        <edge source="('BookPublication', 'Potential Health Benefits of Blackcurrants')" target="('Publisher', 'FOOD &amp; FUNCTION')">
+            <data key="labels">published_by</data>
+        </edge>
+        <edge source="('Researcher', '0000-0001-7290-4496')" target="('BookPublication', 'Phytochemicals')">
+            <data key="labels">author_of</data>
+        </edge>
+        <edge source="('BookPublication', 'Phytochemicals')" target="('Publisher', 'MOLECULAR NUTRITION &amp; FOOD RESEARCH')">
+            <data key="labels">published_by</data>
+        </edge>
+        <edge source="('Researcher', '0000-0003-0427-0369')" target="('BookPublication', 'Clinical Nutrition Studies')">
+            <data key="labels">author_of</data>
+        </edge>
+        <edge source="('BookPublication', 'Clinical Nutrition Studies')" target="('Publisher', 'NUTRITION REVIEWS')">
+            <data key="labels">published_by</data>
+        </edge>
+        <edge source="('Researcher', '0000-0001-7290-4496')" target="('BookPublication', 'Pistachios beneficially affect multiple lipid and apolipoprotein CVD risk factors')">
+            <data key="labels">author_of</data>
+        </edge>
+        <edge source="('BookPublication', 'Pistachios beneficially affect multiple lipid and apolipoprotein CVD risk factors')" target="('Publisher', 'JOURNAL OF AGRICULTURAL AND FOOD CHEMISTRY')">
+            <data key="labels">published_by</data>
+        </edge>
+
+    </graph>
+</graphml>
